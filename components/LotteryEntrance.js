@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMoralis, useWeb3Contract } from "react-moralis";
 import { abi, contractAddresses } from "../constants";
+import { ethers } from "ethers";
 
 export default function LotteryEntrance() {
     const { chainId: chainIdHex, isWeb3Enabled } = useMoralis();
@@ -10,51 +11,51 @@ export default function LotteryEntrance() {
     const lotteryAddress =
         chainId in contractAddresses ? contractAddresses[chainId][0] : null;
 
-    // const { runContractFunction: enterLottery } = useWeb3Contract({
-    //     abi: abi,
-    //     contractAddress: lotteryAddress,
-    //     functionName: "enterLottery",
-    //     params: {},
-    //     msgValue: "",
-    // });
-
     const [lotteryFee, setLotteryFee] = useState("0");
+
+    const { runContractFunction: enterLottery } = useWeb3Contract({
+        abi: abi,
+        contractAddress: lotteryAddress,
+        functionName: "enterLottery",
+        params: {},
+        msgValue: lotteryFee,
+    });
 
     const { runContractFunction: getEntranceFee } = useWeb3Contract({
         abi: abi,
         contractAddress: lotteryAddress,
-        functionName: "getRequestConfirmations",
+        functionName: "getLotteryFee",
         params: {},
     });
 
-    try {
-        // const { runContractFunction: getEntranceFee } = useWeb3Contract({
-        //     abi: abi,
-        //     contractAddress: lotteryAddress,
-        //     functionName: "getInterval",
-        //     params: {},
-        // });
-
-        useEffect(() => {
-            if (isWeb3Enabled) {
-                async function updateUI() {
-                    const entranceFeeFromCall = (
-                        await getEntranceFee()
-                    ).toString();
-                    setLotteryFee(entranceFeeFromCall);
-                }
-                updateUI();
+    useEffect(() => {
+        if (isWeb3Enabled) {
+            async function updateUI() {
+                const entranceFeeFromCall = (await getEntranceFee()).toString();
+                setLotteryFee(entranceFeeFromCall);
             }
-        }, [isWeb3Enabled]);
-    } catch (e) {
-        console.log(e);
-    }
+            updateUI();
+        }
+    }, [isWeb3Enabled]);
 
     return (
         <div>
-            <h1>Body</h1>
-            <p>Lottery Address: {lotteryAddress}</p>
-            <p>Fee: {lotteryFee}</p>
+            Hi from lottery entrance!
+            {lotteryAddress ? (
+                <div>
+                    <button
+                        onClick={async function () {
+                            await enterLottery();
+                        }}
+                    >
+                        Enter Lottery
+                    </button>
+                    Entrance Fee:{" "}
+                    {ethers.utils.formatUnits(lotteryFee, "ether")} ETH{" "}
+                </div>
+            ) : (
+                <div>No Lottery Address Detected!</div>
+            )}
         </div>
     );
 }
