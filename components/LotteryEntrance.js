@@ -10,6 +10,9 @@ export default function LotteryEntrance() {
     const lotteryAddress =
         chainId in contractAddresses ? contractAddresses[chainId][0] : null;
     const [lotteryFee, setLotteryFee] = useState("0");
+    const [numPlayer, setNumPlayer] = useState("0");
+    const [recentWinner, setRecentWinner] = useState("0");
+
     const dispatch = useNotification();
 
     const { runContractFunction: enterLottery } = useWeb3Contract({
@@ -27,12 +30,31 @@ export default function LotteryEntrance() {
         params: {},
     });
 
+    const { runContractFunction: getNumPlayers } = useWeb3Contract({
+        abi: abi,
+        contractAddress: lotteryAddress,
+        functionName: "getNumberOfPlayers",
+        params: {},
+    });
+
+    const { runContractFunction: getRecentWinner } = useWeb3Contract({
+        abi: abi,
+        contractAddress: lotteryAddress,
+        functionName: "getRecentWinner",
+        params: {},
+    });
+
+    async function updateUI() {
+        const entranceFeeFromCall = (await getEntranceFee()).toString();
+        const numPlayersFromCall = (await getNumPlayers()).toString();
+        const recentWinnerFromCall = (await getRecentWinner()).toString();
+        setLotteryFee(entranceFeeFromCall);
+        setNumPlayer(numPlayersFromCall);
+        setRecentWinner(recentWinnerFromCall);
+    }
+
     useEffect(() => {
         if (isWeb3Enabled) {
-            async function updateUI() {
-                const entranceFeeFromCall = (await getEntranceFee()).toString();
-                setLotteryFee(entranceFeeFromCall);
-            }
             updateUI();
         }
     }, [isWeb3Enabled]);
@@ -40,6 +62,7 @@ export default function LotteryEntrance() {
     const handleSuccess = async function (tx) {
         await tx.wait(1);
         handleNewNotification(tx);
+        updateUI();
     };
 
     const handleNewNotification = function (tx) {
@@ -68,7 +91,9 @@ export default function LotteryEntrance() {
                         Enter Lottery
                     </button>
                     Entrance Fee:{" "}
-                    {ethers.utils.formatUnits(lotteryFee, "ether")} ETH{" "}
+                    {ethers.utils.formatUnits(lotteryFee, "ether")} ETH <br />
+                    Players: {numPlayer} <br />
+                    Recent Winner: {recentWinner}
                 </div>
             ) : (
                 <div>No Lottery Address Detected!</div>
