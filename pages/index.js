@@ -2,6 +2,7 @@ import Head from "next/head";
 import Image from "next/image";
 // import CustomHeader from "../components/CustomHeader";
 import Header from "../components/Header";
+import LotteryEntrance from "../components/LotteryEntrance";
 import styles from "../styles/Home.module.css";
 
 export default function Home() {
@@ -17,6 +18,8 @@ export default function Home() {
             </Head>
 
             <Header />
+
+            <LotteryEntrance />
         </div>
     );
 }
