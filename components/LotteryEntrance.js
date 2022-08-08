@@ -5,13 +5,14 @@ import { ethers } from "ethers";
 import { useNotification } from "web3uikit";
 
 export default function LotteryEntrance() {
-    const { chainId: chainIdHex, isWeb3Enabled } = useMoralis();
+    const { chainId: chainIdHex, isWeb3Enabled, Moralis, web3 } = useMoralis();
     const chainId = parseInt(chainIdHex);
     const lotteryAddress =
         chainId in contractAddresses ? contractAddresses[chainId][0] : null;
     const [lotteryFee, setLotteryFee] = useState("0");
     const [numPlayer, setNumPlayer] = useState("0");
     const [recentWinner, setRecentWinner] = useState("0");
+    const [startBlockNumber, setStartBlockNumber] = useState(0);
 
     const dispatch = useNotification();
 
@@ -53,9 +54,16 @@ export default function LotteryEntrance() {
         setRecentWinner(recentWinnerFromCall);
     }
 
+    async function getCurrentBlockNum() {
+        const num = await web3.getBlockNumber();
+        console.log("New block: ", num);
+        setStartBlockNumber(num);
+    }
+
     useEffect(() => {
         if (isWeb3Enabled) {
             updateUI();
+            getCurrentBlockNum();
         }
     }, [isWeb3Enabled]);
 
@@ -75,6 +83,38 @@ export default function LotteryEntrance() {
         });
     };
 
+    const eventABI = ["event WinnerPicked(address indexed winner)"];
+    let iface = new ethers.utils.Interface(eventABI);
+
+    const filter = {
+        address: lotteryAddress,
+        topics: [iface.getEventTopic("WinnerPicked")],
+    };
+
+    useEffect(() => {
+        if (isWeb3Enabled) {
+            web3.on(filter, async (log) => {
+                if (log.topics !== undefined && log.topics.length > 1) {
+                    if (log.blockNumber >= startBlockNumber) {
+                        setStartBlockNumber(log.blockNumber);
+                        let newWinner = ethers.utils.hexStripZeros(
+                            log.topics[1]
+                        );
+                        dispatch({
+                            type: "info",
+                            message: newWinner,
+                            title: "Winner Picked!",
+                            position: "topR",
+                            icon: "bell",
+                        });
+                    }
+                }
+
+                updateUI();
+            });
+        }
+    }, [isWeb3Enabled]);
+
     return (
         <div>
             Hi from lottery entrance!
@@ -82,6 +122,7 @@ export default function LotteryEntrance() {
                 <div>
                     <button
                         onClick={async function () {
+                            // getCurrentBlockNum();
                             await enterLottery({
                                 onSuccess: handleSuccess,
                                 onError: (error) => console.log(error),
