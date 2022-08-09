@@ -3,22 +3,13 @@ import { ConnectButton, Row, Col } from "web3uikit";
 
 export default function Header() {
     return (
-        <div>
-            <Row alignItems="center">
-                {/* <Col
-                    breakpointsConfig={{
-                        lg: 24,
-                        md: 24,
-                        sm: 16,
-                        xs: 8,
-                    }}
-                    span={12}
-                >
-                    <div className="logo">Decentralized Lottery</div>
-                </Col> */}
-            </Row>
-
-            <ConnectButton moralisAuth={false} />
+        <div className="p-5 border-b-2 flex flex-row">
+            <h1 className="py-4 px-4 font-blog text-3xl">
+                Decentralized Lottery
+            </h1>
+            <div className="ml-auto py-2 px-4">
+                <ConnectButton moralisAuth={false} />
+            </div>
         </div>
     );
 }
