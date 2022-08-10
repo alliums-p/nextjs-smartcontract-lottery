@@ -151,6 +151,7 @@ export default function LotteryEntrance() {
                         </div>
                         <div>Players: {numPlayer}</div>
                         <div>Recent Winner: {recentWinner}</div>
+                        <div>Fleek Check...</div>
                     </div>
                 </div>
             ) : (
